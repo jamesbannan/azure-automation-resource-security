@@ -10,7 +10,7 @@
 
 .COPYRIGHT 
 
-.TAGS Azure Automation,RBAC,Azure Resource Manager,Azure Active Directory
+.TAGS Automation,RBAC,ARM,AAD
 
 .LICENSEURI https://github.com/jamesbannan/azure-automation-resource-security/blob/master/LICENSE
 
