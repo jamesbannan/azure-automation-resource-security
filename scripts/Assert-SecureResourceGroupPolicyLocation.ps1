@@ -48,22 +48,26 @@ function Assert-SecureResourceGroupPolicyLocation
             $resourceGroupName = $resourceGroup.name
             $resourceGroupRegion = ((Get-AzureRegion -resourceGroupLocation $resourceGroup.location).Region).ToLower()
             $policyName = 'resource-group-location' + '-' + $resourceGroupRegion
+            $azureLocations = Get-AzureRmLocation | Where-Object {$_.Location -like "*$resourceGroupRegion*"}
             if((Get-AzureRmPolicyDefinition | Where-Object {$_.Name -eq $policyName}) -eq $null){
-                $azureRegions = Get-AzureRmLocation | Where-Object {$_.Location -like "*$resourceGroupRegion*"}
+                $azureRegions = '"' + ($azureLocations.Location -join '" , "') + '"'
+                $policyDefinition = @"
+{  
+    "if" : {
+        "not" : {
+            "field" : "location",
+            "in" : [$azureRegions]
+        }
+    },
+    "then" : {
+        "effect" : "deny"
+    }
+}
+"@
                 $policy = New-AzureRmPolicyDefinition `
                     -Name $policyName `
-                    -Description "Policy to allow resource creation only in certain regions" `
-                    -Policy '{  
-                              "if" : {
-                                "not" : {
-                                  "field" : "location",
-                                  "in" : ["northeurope" , "westeurope"]
-                                }
-                              },
-                              "then" : {
-                                "effect" : "deny"
-                              }
-                            }'          
+                    -Description "Policy to allow resource creation only in $resourceGroupRegion" `
+                    -Policy $policyDefinition          
             }
         }
     }
@@ -71,14 +75,3 @@ function Assert-SecureResourceGroupPolicyLocation
     {
     }
 }
-
-### Authenticate to ARM and Azure AD ###
-
-$credARM = Get-AutomationPSCredential -Name $AutomationAccount
-Add-AzureRmAccount -Credential $credARM -Verbose
-
-### Retrieve Resource Groups based on tag values
-
-
-
-Assert-SecureResourceGroupPolicyLocation
