@@ -1,27 +1,19 @@
 ﻿<#
-    .SYNOPSIS
-    Gets the IP ranges associated with Azure regions in CIDR format.
-    .DESCRIPTION
-    The Get-MicrosoftAzureDatacenterIPRange cmdlet gets a list of subnets in CIDR format (eg 192.168.1.0/24). A specific region can be specified, otherwise this cmdlet will return all subnets from all regions.
-        
-    The cmdlet gets the information from the Microsoft Azure Datacenter IP Ranges file, this is updated weekly, and is available for download from: https://www.microsoft.com/en-us/download/details.aspx?id=41653.
-            
-    If a path to the above file is not specified, then this CMDLet will download the file and store it in memory. Note, it will only do this once per execution.
-            
-    If no region is specified, then all subnets for all regions will be returned.
-    .EXAMPLE
-    C:\PS> Get-MicrosoftAzureDatacenterIPRange -AzureRegion 'North Central US'
-    Returns all of the subnets in the North Central US DC, will download the Microsoft Azure Datacenter IP Ranges file into memory
-    .EXAMPLE
-    C:\PS> Get-MicrosoftAzureDatacenterIPRange -Path C:\Temp\AzureRanges.xml -AzureRegion 'North Central US'
-    Returns all of the subnets in the North Central US DC based on the specified file
-    .EXAMPLE
-    C:\PS> Get-MicrosoftAzureDatacenterIPRange
-    Returns all of the subnets used by Azure, will download the Microsoft Azure Datacenter IP Ranges file into memory
-    .INPUTS
-    Can take Azure region names from the pipeline.
-    .OUTPUTS
-    Outputs objects containing each subnet and their region.
+.SYNOPSIS
+    Applies an ARM policy on a Resource Group to prevent deployment of resources in other geo-political regions.
+.DESCRIPTION
+    The Assert-SecureResourceGroupPolicyLocation cmdlet checks for the existence of an ARM policy which prevents deployment of resources outside the geopolitical region in which the Resource Group is located.
+
+    For example, if the Resource Group is in Australia Southeast, a policy will be created which only allows resources within the Resource Group to be deployed to Australia Southeast and Australia East.
+
+    The policy is only created if the Resource Group has a tag called 'policy-location' with a value of 'enabled'.
+.EXAMPLE
+    C:\PS> $resourceGroups = Find-AzureRmResourceGroup -Tag @{ Name='policy-location'; Value='enabled' } | Get-MicrosoftAzureDatacenterIPRange -resourceGroups $resourceGroups
+    Finds all Resource Groups in the current subscription with the resource tag 'policy-location':'enabled', and assigns an ARM policy to prevent deployment of resources outside the Resource Group's geo-political region.
+.INPUTS
+    Can take Azure Resource Group properties from Find-AzureRmResourceGroup from the pipeline.
+.OUTPUTS
+    None.
 #>
 function Assert-SecureResourceGroupPolicyLocation
 {
@@ -33,18 +25,17 @@ function Assert-SecureResourceGroupPolicyLocation
         [Parameter(Mandatory=$true,
                     ValueFromPipelineByPropertyName=$true,
                     Position=0)]
-        $resourceGroupRegion
+        $resourceGroups
     )
 
     Begin
     {
-        $secureResourceGroups  = Find-AzureRmResourceGroup -Tag @{ Name='policy-location'; Value='enabled' }
         $subscription = Get-AzureRmContext
         $subscriptionId = $subscription.Subscription.SubscriptionId
     }
     Process
     {
-        foreach($resourceGroup in $secureResourceGroups){
+        foreach($resourceGroup in $resourceGroups){
             $resourceGroupName = $resourceGroup.name
             $resourceGroupRegion = ((Get-AzureRegion -resourceGroupLocation $resourceGroup.location).Region).ToLower()
             $policyName = 'resource-group-location' + '-' + $resourceGroupRegion
@@ -79,10 +70,5 @@ function Assert-SecureResourceGroupPolicyLocation
     }
     End
     {
-        $OutputObject = [PSCustomObject]@{
-                        PolicyDefinition = $policy
-                        PolicyAssignment = $policyAssignment
-                        }
-        Write-Output -InputObject $OutputObject
     }
 }
