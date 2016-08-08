@@ -1,46 +1,43 @@
 ﻿<#
-.Synopsis
-   Short description
+
+.SYNOPSIS
+    Returns the geo-political region of an Azure datacenter.
+
 .DESCRIPTION
-   Long description
+    The Get-AzureRegion cmdlet returns the geo-political region of an Azure datacenter.
+
 .EXAMPLE
-   Example of how to use this cmdlet
+    C:\PS> Get-AzureRegion -location 'australiasoutheast'
+
 .EXAMPLE
-   Another example of how to use this cmdlet
+    C:\PS> Get-AzureRegion -displayName 'Australia Southeast'
+
+.EXAMPLE
+    C:\PS> $resourceGroup = Get-AzureRmResourceGroup -Name 'myGroup' | Get-AzureRegion -location $resourceGroup.location
+
 .INPUTS
-   Inputs to this cmdlet (if any)
+    Can take Azure datacenter locations from the pipeline, in both short form (e.g. 'australiasoutheast') and DisplayName format (e.g. 'Australia Southeast').
+
 .OUTPUTS
-   Output from this cmdlet (if any)
-.NOTES
-   General notes
-.COMPONENT
-   The component this cmdlet belongs to
-.ROLE
-   The role this cmdlet belongs to
-.FUNCTIONALITY
-   The functionality that best describes this cmdlet
+    Main geo-political region of the specified datacenter (e.g. 'Australia').
+
 #>
 function Get-AzureRegion
 {
-    [CmdletBinding(DefaultParameterSetName='Parameter Set 1', 
-                  SupportsShouldProcess=$true, 
-                  PositionalBinding=$false,
-                  HelpUri = 'http://www.microsoft.com/',
-                  ConfirmImpact='Medium')]
+    [CmdletBinding()]
     [Alias()]
-    [OutputType([String])]
     Param
     (
-        # Param1 help description
-        [Parameter(Mandatory=$true, 
-                   ValueFromPipeline=$true,
-                   ValueFromPipelineByPropertyName=$true, 
-                   ValueFromRemainingArguments=$false, 
-                   Position=0,
-                   ParameterSetName='Parameter Set 1')]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        $resourceGroupLocation
+        # Azure Automation Account
+        [Parameter(Mandatory=$false,
+                    ValueFromPipelineByPropertyName=$true,
+                    Position=0)]
+        $location,
+        # Azure Automation Account
+        [Parameter(Mandatory=$false,
+                    ValueFromPipelineByPropertyName=$true,
+                    Position=0)]
+        $displayName
     )
 
     Begin
@@ -48,16 +45,15 @@ function Get-AzureRegion
     }
     Process
     {
-        if($resourceGroupLocation -like '*asia'){$azureRegion = 'Asia'}
-        elseif($resourceGroupLocation -like 'canada*'){$azureRegion = 'Canada'}
-        elseif($resourceGroupLocation -like 'australia*'){$azureRegion = 'Australia'}
-        elseif($resourceGroupLocation -like 'brazil*'){$azureRegion = 'Brazil'}
-        elseif($resourceGroupLocation -like 'japan*'){$azureRegion = 'Japan'}
-        elseif($resourceGroupLocation -like '*us'){$azureRegion = 'US'}
-        elseif($resourceGroupLocation -like '*europe'){$azureRegion = 'Europe'}
-        elseif($resourceGroupLocation -like 'china*'){$azureRegion = 'China'}
-        elseif($resourceGroupLocation -like '*india'){$azureRegion = 'India'}
-        elseif($resourceGroupLocation -like 'canada*'){$azureRegion = 'Canada'}
+        if($location -like '*asia' -or $displayName -like '*Asia'){$azureRegion = 'Asia'}
+        elseif($location -like 'canada*' -or $displayName -like 'Canada*'){$azureRegion = 'Canada'}
+        elseif($location -like 'australia*' -or $displayName -like 'Australia*'){$azureRegion = 'Australia'}
+        elseif($location -like 'brazil*' -or $displayName -like 'Brazil*'){$azureRegion = 'Brazil'}
+        elseif($location -like 'japan*' -or $displayName -like 'Japan*'){$azureRegion = 'Japan'}
+        elseif($location -like '*us' -or $displayName -like '*US'){$azureRegion = 'US'}
+        elseif($location -like '*europe' -or $displayName -like '*Europe'){$azureRegion = 'Europe'}
+        elseif($location -like 'china*' -or $displayName -like 'China*'){$azureRegion = 'China'}
+        elseif($location -like '*india' -or $displayName -like '*India'){$azureRegion = 'India'}
     }
     End
     {
