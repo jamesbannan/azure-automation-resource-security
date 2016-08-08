@@ -48,9 +48,9 @@ function Assert-SecureResourceGroupPolicyLocation
             $resourceGroupName = $resourceGroup.name
             $resourceGroupRegion = ((Get-AzureRegion -resourceGroupLocation $resourceGroup.location).Region).ToLower()
             $policyName = 'resource-group-location' + '-' + $resourceGroupRegion
-            $azureLocations = Get-AzureRmLocation | Where-Object {$_.Location -like "*$resourceGroupRegion*"}
+            $azureLocations = Get-AzureRmLocation | Where-Object {$_.Location -like "$resourceGroupRegion*" -or $_.Location -like "*$resourceGroupRegion"}
             if((Get-AzureRmPolicyDefinition | Where-Object {$_.Name -eq $policyName}) -eq $null){
-                $azureRegions = '"' + ($azureLocations.Location -join '" , "') + '"'
+                $azureRegions = ' "' + ($azureLocations.Location -join '" , "') + '" '
                 $policyDefinition = @"
 {  
     "if" : {
@@ -68,10 +68,21 @@ function Assert-SecureResourceGroupPolicyLocation
                     -Name $policyName `
                     -Description "Policy to allow resource creation only in $resourceGroupRegion" `
                     -Policy $policyDefinition          
+                $policyAssignmentName = $resourceGroupName + '-' + $policyName
+                $policyAssignment = Get-AzureRmPolicyAssignment -Scope $resourceGroup.id | Where-Object {$_.Name -eq $policyAssignmentName}
+                if($policyAssignment -eq $null){
+                    $policyAssignment = New-AzureRmPolicyAssignment -Name $policyAssignmentName -PolicyDefinition $policy -Scope $resourceGroup.id
+                }
+                
             }
         }
     }
     End
     {
+        $OutputObject = [PSCustomObject]@{
+                        PolicyDefinition = $policy
+                        PolicyAssignment = $policyAssignment
+                        }
+        Write-Output -InputObject $OutputObject
     }
 }
