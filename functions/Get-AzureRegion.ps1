@@ -22,6 +22,7 @@
     Main geo-political region of the specified datacenter (e.g. 'Australia').
 
 #>
+
 function Get-AzureRegion
 {
     [CmdletBinding()]

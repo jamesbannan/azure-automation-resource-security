@@ -1,52 +1,26 @@
-﻿<#PSScriptInfo
+﻿<#
 
-.VERSION 0.1
+.SYNOPSIS
+    Creates security groups in Azure Active Directory for selected Resource Groups and assigns Azure RBAC roles.
 
-.GUID 789edb15-d900-4197-9f93-a1afd5a4e8e9
+.DESCRIPTION
+    The Assert-SecureResourceGroupRbac cmdlet checks for the existence of a Security Group in Azure Active Directory for each RBAC role.
 
-.AUTHOR James Bannan
+    For example, a Resource Group called 'myGroup' will have three groups created: 'myGroup-Owners', 'myGroup-Contributors', 'myGroup-Reader', and the relevant RBAC role will be assigned to each group.
 
-.COMPANYNAME 
+    The policy is only created if the Resource Group has a tag called 'secure-rbac' with a value of 'enabled'.
 
-.COPYRIGHT 
+.EXAMPLE
+    C:\PS> $resourceGroups = Find-AzureRmResourceGroup -Tag @{ Name='secure-rbac'; Value='enabled' } | Assert-SecureResourceGroupRbac -resourceGroups $resourceGroups
+    Finds all Resource Groups in the current subscription with the resource tag 'secure-rbac':'enabled', creates Security Groups in Azure Active Directory and assigns the relevant RBAC role.
 
-.TAGS Automation,RBAC,ARM,AAD
+.INPUTS
+    Can take Azure Resource Group properties from Find-AzureRmResourceGroup from the pipeline.
 
-.LICENSEURI https://github.com/jamesbannan/azure-automation-resource-security/blob/master/LICENSE
-
-.PROJECTURI https://github.com/jamesbannan/azure-automation-resource-security
-
-.ICONURI 
-
-.EXTERNALMODULEDEPENDENCIES MsOnline,AzureRM.Resources
-
-.REQUIREDSCRIPTS 
-
-.EXTERNALSCRIPTDEPENDENCIES 
-
-.RELEASENOTES
+.OUTPUTS
+    None.
 
 #>
-
-<# 
-
-.DESCRIPTION 
- This script creates Owner, Contributor and Reader groups for each Azure Resource Group with a secure-rbac:enabled tag, and creates an RBAC role assignment for each group. 
-
-#> 
-
-Param(
-    [CmdletBinding()]
-    # Azure Automation Account
-    [Parameter(Mandatory=$true,
-                ValueFromPipelineByPropertyName=$true,
-                Position=0)]
-    $AutomationAccount,
-    # Azure Active Directory Account
-    [Parameter(Mandatory=$true,
-                ValueFromPipelineByPropertyName=$true)]
-    $AzureADAccount
-    )
 
 function Assert-SecureResourceGroupRbac
 {
@@ -54,21 +28,37 @@ function Assert-SecureResourceGroupRbac
     [Alias()]
     Param
     (
+        # Azure Automation Account
+        [Parameter(Mandatory=$true,
+            ValueFromPipelineByPropertyName=$true,
+            Position=0)]
+        $AutomationAccount,
+        # Azure Active Directory Account
+        [Parameter(Mandatory=$true,
+            ValueFromPipelineByPropertyName=$true)]
+        $AzureADAccount,
+        # Resource Groups
+        [Parameter(Mandatory=$true,
+            ValueFromPipelineByPropertyName=$true)]
+        $resourceGroups
     )
 
     Begin
     {
+        $roleTypes = @('Owner','Contributor','Reader')
+        $subscription = Get-AzureRmContext
+        $subscriptionId = $subscription.Subscription.SubscriptionId
     }
     Process
     {
-        foreach($resourceGroup in $secureResourceGroups){
+        foreach($resourceGroup in $resourceGroups){
             $resourceGroupName = $resourceGroup.name
             foreach($role in $roleTypes){
                 $adGroupName = $resourceGroupName + '-' + $role
                 $adGroup = Get-MsolGroup -SearchString $adGroupName
                 if($adGroup -eq $null){
                     $description = 'Automatically created by Azure Automation at '+ (((Get-Date).ToUniversalTime()).ToString('yyMMdd-HHmm'))
-                    $adGroup = New-MsolGroup -DisplayName $adGroupName -Description  -Verbose
+                    $adGroup = New-MsolGroup -DisplayName $adGroupName -Description $description -Verbose
                     while((Get-MsolGroup -SearchString $adGroupName) -eq $null){
                         Write-Host 'Checking for successful deployment of Azure AD group.'
                         }
@@ -93,20 +83,3 @@ function Assert-SecureResourceGroupRbac
     {
     }
 }
-
-### Authenticate to ARM and Azure AD ###
-
-$credARM = Get-AutomationPSCredential -Name $AutomationAccount
-$credAAD = Get-AutomationPSCredential -Name $AzureADAccount
-Import-Module MsOnline
-Add-AzureRmAccount -Credential $credARM -Verbose
-Connect-MsolService -Credential $credAAD -Verbose
-
-### Retrieve Resource Groups based on tag values
-
-$secureResourceGroups  = Find-AzureRmResourceGroup -Tag @{ Name='secure-rbac'; Value='enabled' }
-$roleTypes = @('Owner','Contributor','Reader')
-$subscription = Get-AzureRmContext
-$subscriptionId = $subscription.Subscription.SubscriptionId
-
-Assert-SecureResourceGroupRbac
