@@ -12,7 +12,7 @@
     RootModule = 'AzureResourceSecurity.psm1'
 
     # Version number of this module.
-    ModuleVersion = '0.0.1'
+    ModuleVersion = '0.1.0'
 
     # ID used to uniquely identify this module
     GUID = '536bfdee-cd30-4969-9b5a-c270437df138'
@@ -27,7 +27,7 @@
     Copyright = 'Copyright (c) 2016 Steam Driven (jamesbannanit.com)'
 
     # Description of the functionality provided by this module
-    Description = 'Configures Azure Resource Manager policies on selected Resources and Resource Groups.'
+    Description = 'Configures Azure Resource Manager policies on selected Resource Groups.'
 
     # Minimum version of the Windows PowerShell engine required by this module
     # PowerShellVersion = ''
@@ -48,7 +48,7 @@
     # ProcessorArchitecture = ''
 
     # Modules that must be imported into the global environment prior to importing this module
-    # RequiredModules = @()
+    RequiredModules = @('AzureRM.Profile', 'AzureRM.Resources')
 
     # Assemblies that must be loaded prior to importing this module
     # RequiredAssemblies = @()
@@ -66,7 +66,7 @@
     # NestedModules = 
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = @('Get-AzureRegion')
+    FunctionsToExport = @('Get-AzureRegion', 'Assert-SecureResourceGroupPolicyLocation')
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport = ''
@@ -92,7 +92,7 @@
         PSData = @{
 
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags = 'azure', 'ip', 'networking', 'subnets', 'cidr', 'regions', 'downloads'
+            Tags = 'azure', 'arm', 'policy', 'regions'
 
             # A URL to the license for this module.
             LicenseUri = 'https://github.com/jamesbannan/azure-automation-resource-security/blob/master/LICENSE'
