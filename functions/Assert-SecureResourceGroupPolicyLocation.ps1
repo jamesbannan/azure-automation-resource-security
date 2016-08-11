@@ -30,15 +30,18 @@ function Assert-SecureResourceGroupPolicyLocation
     (
         # Azure Automation Account
         [Parameter(Mandatory=$true,
-                    ValueFromPipelineByPropertyName=$true,
-                    Position=0)]
-        $resourceGroups
+            ValueFromPipelineByPropertyName=$true,
+            Position=0)]
+        $resourceGroups,
+
+        # Azure Active Directory Account
+        [Parameter(Mandatory=$true,
+            ValueFromPipelineByPropertyName=$true)]
+        $subscriptionId
     )
 
     Begin
     {
-        $subscription = Get-AzureRmContext
-        $subscriptionId = $subscription.Subscription.SubscriptionId
     }
     Process
     {

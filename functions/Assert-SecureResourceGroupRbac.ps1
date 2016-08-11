@@ -32,22 +32,18 @@ function Assert-SecureResourceGroupRbac
         [Parameter(Mandatory=$true,
             ValueFromPipelineByPropertyName=$true,
             Position=0)]
-        $AutomationAccount,
+        $resourceGroups,
+
         # Azure Active Directory Account
         [Parameter(Mandatory=$true,
             ValueFromPipelineByPropertyName=$true)]
-        $AzureADAccount,
-        # Resource Groups
-        [Parameter(Mandatory=$true,
-            ValueFromPipelineByPropertyName=$true)]
-        $resourceGroups
+        $subscriptionId
     )
 
     Begin
     {
         $roleTypes = @('Owner','Contributor','Reader')
-        $subscription = Get-AzureRmContext
-        $subscriptionId = $subscription.Subscription.SubscriptionId
+
     }
     Process
     {
