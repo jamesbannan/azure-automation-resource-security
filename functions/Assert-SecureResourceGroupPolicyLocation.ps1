@@ -72,9 +72,10 @@ function Assert-SecureResourceGroupPolicyLocation
                 -Description "Policy to allow resource creation only in $resourceGroupRegion" `
                 -Policy $policyDefinition          
             $policyAssignmentName = $resourceGroupName + '-' + $policyName
-            $policyAssignment = Get-AzureRmPolicyAssignment -Scope $resourceGroup.id | Where-Object {$_.Name -eq $policyAssignmentName}
+            $resourceGroup = Get-AzureRmResourceGroup -Name $resourceGroupName
+            $policyAssignment = Get-AzureRmPolicyAssignment -Scope $resourceGroup.ResourceId | Where-Object {$_.Name -eq $policyAssignmentName}
             if($policyAssignment -eq $null){
-                $policyAssignment = New-AzureRmPolicyAssignment -Name $policyAssignmentName -PolicyDefinition $policy -Scope $resourceGroup.id
+                $policyAssignment = New-AzureRmPolicyAssignment -Name $policyAssignmentName -PolicyDefinition $policy -Scope $resourceGroup.ResourceId
             }
                 
         }
