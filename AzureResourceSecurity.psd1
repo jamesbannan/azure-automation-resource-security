@@ -12,7 +12,7 @@
     RootModule = 'AzureResourceSecurity.psm1'
 
     # Version number of this module.
-    ModuleVersion = '0.3.0'
+    ModuleVersion = '0.3.2'
 
     # ID used to uniquely identify this module
     GUID = '536bfdee-cd30-4969-9b5a-c270437df138'
