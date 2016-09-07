@@ -51,6 +51,7 @@ function Assert-SecureResourceGroupPolicyLocation
     Process
     {
         $policyName = 'resource-group-location' + '-' + $resourceGroupRegion
+        $resourceGroup = Get-AzureRmResourceGroup -Name $resourceGroupName
         $azureLocations = Get-AzureRmLocation | Where-Object {$_.Location -like "$resourceGroupRegion*" -or $_.Location -like "*$resourceGroupRegion"}
         if((Get-AzureRmPolicyDefinition | Where-Object {$_.Name -eq $policyName}) -eq $null){
             $azureRegions = ' "' + ($azureLocations.Location -join '" , "') + '" '
@@ -64,22 +65,23 @@ function Assert-SecureResourceGroupPolicyLocation
 },
 "then" : {
     "effect" : "deny"
-}
+    }
 }
 "@
             $policy = New-AzureRmPolicyDefinition `
                 -Name $policyName `
                 -Description "Policy to allow resource creation only in $resourceGroupRegion" `
-                -Policy $policyDefinition          
-            $policyAssignmentName = $resourceGroupName + '-' + $policyName
-            $resourceGroup = Get-AzureRmResourceGroup -Name $resourceGroupName
-            $policyAssignment = Get-AzureRmPolicyAssignment -Scope $resourceGroup.ResourceId | Where-Object {$_.Name -eq $policyAssignmentName}
-            if($policyAssignment -eq $null){
-                $policyAssignment = New-AzureRmPolicyAssignment -Name $policyAssignmentName -PolicyDefinition $policy -Scope $resourceGroup.ResourceId
+                -Policy $policyDefinition
             }
-                
+            else {
+                $policy = Gew-AzureRmPolicyDefinition -Name $policyName
+            }
+                      
+        $policyAssignmentName = $resourceGroupName + '-' + $policyName
+        $policyAssignment = Get-AzureRmPolicyAssignment -Scope $resourceGroup.ResourceId | Where-Object {$_.Name -eq $policyAssignmentName}
+        if($policyAssignment -eq $null){
+            New-AzureRmPolicyAssignment -Name $policyAssignmentName -PolicyDefinition $policy -Scope $resourceGroup.ResourceId -Verbose
         }
-
     }
     End
     {
